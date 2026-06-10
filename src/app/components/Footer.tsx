@@ -19,7 +19,6 @@ interface SiteSettings {
     tiktok?: string;
 }
 
-// Custom SVG Icons for Brands
 const InstagramIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -55,10 +54,11 @@ export function Footer() {
     return (
         <footer className="bg-[#2C3E2B] text-[#FAF9F6]">
             <div className="max-w-7xl mx-auto px-6 py-14">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">
+                {/* Changed grid-cols-4 to grid-cols-1 md:grid-cols-3 to keep it balanced */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 mb-12">
 
                     {/* Brand Section */}
-                    <div className="col-span-2 lg:col-span-1">
+                    <div className="md:col-span-1">
                         <Link href="/" className="flex items-center gap-2 mb-4 group inline-flex">
                             <div className="w-9 h-9 rounded-full bg-[#FAF9F6] flex items-center justify-center transition-transform group-hover:scale-105">
                                 <Leaf className="w-5 h-5 text-[#2C3E2B]" />
@@ -114,31 +114,6 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Categories */}
-                    <div>
-                        <h4 className="mb-5 text-[#FAF9F6]/90 text-xs font-bold uppercase tracking-[0.15em]">
-                            Categories
-                        </h4>
-                        <ul className="space-y-3">
-                            {[
-                                { label: 'Indoor Plants', href: '/categories/indoor-plants' },
-                                { label: 'Landscape Plants', href: '/categories/landscape-plants' },
-                                { label: 'Edible & Herbs', href: '/categories/edible-herbs' },
-                                { label: 'Pots & Planters', href: '/categories/pots-planters' },
-                                { label: 'Materials & Tools', href: '/categories/materials-tools' }
-                            ].map((cat) => (
-                                <li key={cat.label}>
-                                    <Link
-                                        href={cat.href}
-                                        className="text-[#FAF9F6]/60 hover:text-white transition-colors text-sm font-light"
-                                    >
-                                        {cat.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
                     {/* Contact */}
                     <div>
                         <h4 className="mb-5 text-[#FAF9F6]/90 text-xs font-bold uppercase tracking-[0.15em]">
@@ -161,12 +136,8 @@ export function Footer() {
 
                 {/* Bottom Bar */}
                 <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-light text-[#FAF9F6]/40">
-                    <p>
-                        © {new Date().getFullYear()} Thuruliya Gardens Nursery & Landscaping. All rights reserved.
-                    </p>
-                    <p>
-                        Sri Lanka&apos;s premier plant destination.
-                    </p>
+                    <p>© {new Date().getFullYear()} Thuruliya Gardens Nursery & Landscaping. All rights reserved.</p>
+                    <p>Sri Lanka&apos;s premier plant destination.</p>
                 </div>
             </div>
         </footer>
