@@ -6,22 +6,21 @@ import { CategoryNav } from "@/app/components/CategoryNav";
 import { Footer } from "@/app/components/Footer";
 import { Loader2, Wrench } from "lucide-react";
 
+// FIXED: Updated import path to match your other components
+import { NatureAudio } from "@/app/components/NatureAudio";
+
 // FIREBASE
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-// 1. STRICT TYPE DEFINITION (Fixes the 'any' error)
+// 1. STRICT TYPE DEFINITION
 interface SiteSettings {
     seoTitle?: string;
     seoDescription?: string;
     maintenanceMode?: boolean;
 }
 
-export default function ShopLayout({
-                                       children,
-                                   }: {
-    children: React.ReactNode;
-}) {
+export default function ShopLayout({ children }: { children: React.ReactNode }) {
     const [settings, setSettings] = useState<SiteSettings | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -35,7 +34,6 @@ export default function ShopLayout({
                     const data = docSnap.data() as SiteSettings;
                     setSettings(data);
 
-                    // Dynamically apply SEO Title and Description to the browser
                     if (data.seoTitle) document.title = data.seoTitle;
 
                     if (data.seoDescription) {
@@ -72,7 +70,8 @@ export default function ShopLayout({
                 <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center border border-[#D5E5D6] shadow-sm mb-6">
                     <Wrench className="w-10 h-10 text-[#2C3E2B]" />
                 </div>
-                <h1 className="text-3xl sm:text-5xl font-serif text-[#2C3E2B] mb-4">We're upgrading the garden!</h1>
+                {/* FIXED: Changed We're to We&apos;re */}
+                <h1 className="text-3xl sm:text-5xl font-serif text-[#2C3E2B] mb-4">We&apos;re upgrading the garden!</h1>
                 <p className="text-[#4A6A48] max-w-md mx-auto font-medium leading-relaxed">
                     Thuruliya Gardens is currently undergoing scheduled maintenance to bring you a better experience. Please check back shortly.
                 </p>
@@ -82,7 +81,6 @@ export default function ShopLayout({
 
     return (
         <div className="flex flex-col min-h-screen bg-[#FAF9F6]">
-            {/* Removed the 'settings' prop to fix the TS2322 errors */}
             <Header />
             <CategoryNav />
 
@@ -90,6 +88,7 @@ export default function ShopLayout({
                 {children}
             </main>
 
+            <NatureAudio />
             <Footer />
         </div>
     );
