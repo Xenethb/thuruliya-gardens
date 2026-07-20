@@ -9,12 +9,14 @@ import { CheckCircle, Truck, Banknote, Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, runTransaction } from 'firebase/firestore';
 
+// TELEGRAM NOTIFICATION
+import { sendTelegramNotification } from '@/lib/telegram';
+
 interface CartItem {
     product: {
         id: string;
         name: string;
         price: number;
-
         image: string;
     };
     quantity: number;
@@ -33,7 +35,7 @@ function CheckoutContent() {
     const [cartItem, setCartItem] = useState<CartItem | null>(null);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    // Form State (Exact requested fields)
+    // Form State
     const [form, setForm] = useState({
         name: '',
         phone: '',
@@ -127,6 +129,30 @@ function CheckoutContent() {
                 body: JSON.stringify(orderData)
             });
 
+            // D. Trigger Telegram Notification
+            const telegramMessage = `
+🚨 <b>NEW ORDER RECEIVED! (#${newOrderId})</b> 🚨
+
+<b>Customer:</b> ${form.name}
+<b>Phone:</b> ${form.phone}
+<b>WhatsApp:</b> ${form.whatsapp || form.phone}
+<b>Email:</b> ${form.email}
+
+<b>Delivery Address:</b>
+${form.address}${form.apartment ? `, ${form.apartment}` : ''}, ${form.city} (${form.postalCode})
+
+<b>Order Details:</b>
+• Product: ${cartItem.product.name} (x${cartItem.quantity})
+• Subtotal: Rs. ${subtotal.toLocaleString()}
+• Delivery: ${delivery === 0 ? 'Free' : `Rs. ${delivery.toLocaleString()}`}
+• <b>Total: Rs. ${total.toLocaleString()}</b>
+• Payment Method: ${paymentMethod === 'cod' ? 'Cash on Delivery' : 'Bank Transfer'}
+${form.notes ? `\n<b>Notes:</b> ${form.notes}` : ''}
+`;
+
+            const phoneForWhatsapp = form.whatsapp || form.phone;
+            await sendTelegramNotification(telegramMessage, phoneForWhatsapp);
+
             // Move to success screen
             setStep('success');
 
@@ -199,7 +225,6 @@ function CheckoutContent() {
                                     <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 transition-all text-sm text-stone-800" />
                                 </div>
                                 <div>
-                                    {/* Added pattern to restrict to numbers/plus sign */}
                                     <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-stone-500">Normal Phone Number</label>
                                     <input required type="tel" pattern="[0-9+ ]*" title="Please enter numbers only" value={form.phone} onChange={e => setForm({...form, phone: e.target.value.replace(/[^0-9+ ]/g, '')})} className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 transition-all text-sm text-stone-800" />
                                 </div>
@@ -210,14 +235,10 @@ function CheckoutContent() {
                             </div>
                         </div>
 
-                        {/* Delivery Info Form (Address already accepts text and numbers by default) */}
+                        {/* Delivery Info Form */}
                         <div className="bg-white rounded-2xl border border-stone-200 p-6 sm:p-8 shadow-sm">
                             <h2 className="mb-6 font-serif text-xl text-[#2C3E2B] border-b border-stone-100 pb-3">Delivery Details</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <div className="sm:col-span-2">
-                                    <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-stone-500">Address</label>
-                                    <input required type="text" value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 transition-all text-sm text-stone-800" />
-                                </div>
                                 <div className="sm:col-span-2">
                                     <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-stone-500">Address</label>
                                     <input required type="text" value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-stone-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 transition-all text-sm text-stone-800" />
