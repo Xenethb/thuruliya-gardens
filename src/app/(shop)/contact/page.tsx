@@ -2,48 +2,43 @@
 
 import { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, CheckCircle, Loader2 } from 'lucide-react';
-
-// IMPORT TELEGRAM NOTIFICATION
 import { sendTelegramNotification } from '@/lib/telegram';
 
 export default function ContactPage() {
-    const [submitted, setSubmitted] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [form, setForm] = useState({ name: '', phone: '', email: '', type: 'landscaping', message: '' });
+    const [step, setStep] = useState<'form' | 'loading' | 'success'>('form');
+    const [form, setForm] = useState({
+        name: '',
+        phone: '',
+        whatsapp: '',
+        email: '',
+        type: 'Landscaping Project',
+        message: ''
+    });
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setIsSubmitting(true);
+        setStep('loading');
 
-        try {
-            // 1. Format the message for Telegram
-            const contactMessage = `
+        // 1. Format the message for Telegram
+        const contactMessage = `
 🌱 <b>NEW INQUIRY RECEIVED</b> 🌱
 
 <b>Name:</b> ${form.name}
-<b>Phone:</b> ${form.phone || 'Not provided'}
+<b>Phone:</b> ${form.phone}
+<b>WhatsApp:</b> ${form.whatsapp || form.phone}
 <b>Email:</b> ${form.email}
-<b>Enquiry Type:</b> ${form.type.toUpperCase()}
+<b>Type:</b> ${form.type}
 
 <b>Message:</b> 
 ${form.message}
-            `;
+        `;
 
-            // 2. Send to Telegram and pass the phone number for the WhatsApp button
-            await sendTelegramNotification(contactMessage, form.phone);
+        // 2. Send it to Telegram, passing the number so the WhatsApp button is created
+        const phoneForWhatsapp = form.whatsapp || form.phone;
+        await sendTelegramNotification(contactMessage, phoneForWhatsapp);
 
-            // 3. Show success screen
-            setSubmitted(true);
-
-            // Optional: Clear form data after sending
-            setForm({ name: '', phone: '', email: '', type: 'landscaping', message: '' });
-
-        } catch (error) {
-            console.error("Failed to send contact message:", error);
-            alert("There was an issue sending your message. Please try again.");
-        } finally {
-            setIsSubmitting(false);
-        }
+        // 3. Show success screen
+        setStep('success');
     }
 
     return (
@@ -82,9 +77,9 @@ ${form.message}
 
                         <ul className="space-y-6 mb-12">
                             {[
-                                { icon: <MapPin className="w-5 h-5" />, label: 'Address', value: '42 Green Path, Colombo 3, Sri Lanka' },
-                                { icon: <Phone className="w-5 h-5" />, label: 'Phone & WhatsApp', value: '+94 11 234 5678' },
-                                { icon: <Mail className="w-5 h-5" />, label: 'Email', value: 'hello@thuruliyagardens.com' },
+                                { icon: <MapPin className="w-5 h-5" />, label: 'Address', value: '1119/d Dhammodaya Mw., Battaramulla / Hokandara' },
+                                { icon: <Phone className="w-5 h-5" />, label: 'Phone & WhatsApp', value: '+94 76 345 5267' },
+                                { icon: <Mail className="w-5 h-5" />, label: 'Email', value: 'thuruliyagardenslk@gmail.com' },
                                 { icon: <Clock className="w-5 h-5" />, label: 'Opening Hours', value: 'Mon–Sat 8am–6pm · Sun 9am–3pm' },
                             ].map((item) => (
                                 <li key={item.label} className="flex items-start gap-4">
@@ -112,7 +107,7 @@ ${form.message}
 
                     {/* Right Column: Contact Form */}
                     <div>
-                        {submitted ? (
+                        {step === 'success' ? (
                             <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center h-full flex flex-col items-center justify-center shadow-sm">
                                 <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 border border-emerald-100">
                                     <CheckCircle className="w-10 h-10 text-emerald-600" />
@@ -120,7 +115,10 @@ ${form.message}
                                 <h2 className="mb-3 font-serif text-3xl text-[#2C3E2B]">Message Sent!</h2>
                                 <p className="text-gray-600 font-light">Thank you for reaching out. One of our experts will get back to you within 24 hours.</p>
                                 <button
-                                    onClick={() => setSubmitted(false)}
+                                    onClick={() => {
+                                        setStep('form');
+                                        setForm({ ...form, message: '' }); // Clear message, keep details
+                                    }}
                                     className="mt-8 text-sm text-[#D97706] hover:text-[#b46205] font-semibold underline underline-offset-4"
                                 >
                                     Send another message
@@ -132,25 +130,43 @@ ${form.message}
                                     Send a Message
                                 </h3>
                                 <form onSubmit={handleSubmit} className="space-y-6">
+
+                                    <div>
+                                        <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="Amara Perera"
+                                            value={form.name}
+                                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 focus:border-[#2C3E2B]/50 transition-all text-sm text-gray-800"
+                                        />
+                                    </div>
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                         <div>
-                                            <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Name</label>
+                                            <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Normal Phone</label>
                                             <input
-                                                type="text"
+                                                type="tel"
                                                 required
-                                                placeholder="Amara Perera"
-                                                value={form.name}
-                                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                                maxLength={10}
+                                                pattern="[0-9]*"
+                                                placeholder="077 123 4567"
+                                                value={form.phone}
+                                                // \D regex instantly removes anything that is not a number
+                                                onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, '') })}
                                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 focus:border-[#2C3E2B]/50 transition-all text-sm text-gray-800"
                                             />
                                         </div>
                                         <div>
-                                            <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Phone</label>
+                                            <label className="block mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">WhatsApp</label>
                                             <input
                                                 type="tel"
-                                                placeholder="+94 77 123 4567"
-                                                value={form.phone}
-                                                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                                                maxLength={10}
+                                                pattern="[0-9]*"
+                                                placeholder="077 123 4567"
+                                                value={form.whatsapp}
+                                                onChange={(e) => setForm({ ...form, whatsapp: e.target.value.replace(/\D/g, '') })}
                                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 focus:border-[#2C3E2B]/50 transition-all text-sm text-gray-800"
                                             />
                                         </div>
@@ -175,10 +191,10 @@ ${form.message}
                                             onChange={(e) => setForm({ ...form, type: e.target.value })}
                                             className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-stone-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2C3E2B]/20 focus:border-[#2C3E2B]/50 transition-all text-sm text-gray-800 cursor-pointer"
                                         >
-                                            <option value="landscaping">Landscaping Project</option>
-                                            <option value="plants">Plant Order / Query</option>
-                                            <option value="maintenance">Garden Maintenance</option>
-                                            <option value="other">Other</option>
+                                            <option value="Landscaping Project">Landscaping Project</option>
+                                            <option value="Plant Order / Query">Plant Order / Query</option>
+                                            <option value="Garden Maintenance">Garden Maintenance</option>
+                                            <option value="Other">Other</option>
                                         </select>
                                     </div>
 
@@ -196,10 +212,10 @@ ${form.message}
 
                                     <button
                                         type="submit"
-                                        disabled={isSubmitting}
-                                        className="w-full flex justify-center items-center py-4 bg-[#2C3E2B] text-white rounded-full hover:bg-opacity-90 transition-colors text-sm font-bold uppercase tracking-wider shadow-md mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
+                                        disabled={step === 'loading'}
+                                        className="w-full py-4 flex items-center justify-center bg-[#2C3E2B] text-white rounded-full hover:bg-opacity-90 transition-colors text-sm font-bold uppercase tracking-wider shadow-md mt-4 disabled:opacity-70"
                                     >
-                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Message'}
+                                        {step === 'loading' ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Message'}
                                     </button>
                                 </form>
                             </div>
