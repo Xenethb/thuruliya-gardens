@@ -1,16 +1,49 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, MapPin, Clock, CheckCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, CheckCircle, Loader2 } from 'lucide-react';
+
+// IMPORT TELEGRAM NOTIFICATION
+import { sendTelegramNotification } from '@/lib/telegram';
 
 export default function ContactPage() {
     const [submitted, setSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [form, setForm] = useState({ name: '', phone: '', email: '', type: 'landscaping', message: '' });
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        // In the future, this will trigger an email API or Firebase database write
-        setSubmitted(true);
+        setIsSubmitting(true);
+
+        try {
+            // 1. Format the message for Telegram
+            const contactMessage = `
+🌱 <b>NEW INQUIRY RECEIVED</b> 🌱
+
+<b>Name:</b> ${form.name}
+<b>Phone:</b> ${form.phone || 'Not provided'}
+<b>Email:</b> ${form.email}
+<b>Enquiry Type:</b> ${form.type.toUpperCase()}
+
+<b>Message:</b> 
+${form.message}
+            `;
+
+            // 2. Send to Telegram and pass the phone number for the WhatsApp button
+            await sendTelegramNotification(contactMessage, form.phone);
+
+            // 3. Show success screen
+            setSubmitted(true);
+
+            // Optional: Clear form data after sending
+            setForm({ name: '', phone: '', email: '', type: 'landscaping', message: '' });
+
+        } catch (error) {
+            console.error("Failed to send contact message:", error);
+            alert("There was an issue sending your message. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -20,7 +53,7 @@ export default function ContactPage() {
             <div className="relative h-56 sm:h-[400px] overflow-hidden bg-[#2C3E2B]">
                 <img
                     src="https://images.unsplash.com/photo-1567891898952-a7e22827a48b?w=1600&h=800&fit=crop&auto=format"
-                    alt="Contact Thurulya Gardens"
+                    alt="Contact Thuruliya Gardens"
                     className="w-full h-full object-cover opacity-80"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
@@ -51,7 +84,7 @@ export default function ContactPage() {
                             {[
                                 { icon: <MapPin className="w-5 h-5" />, label: 'Address', value: '42 Green Path, Colombo 3, Sri Lanka' },
                                 { icon: <Phone className="w-5 h-5" />, label: 'Phone & WhatsApp', value: '+94 11 234 5678' },
-                                { icon: <Mail className="w-5 h-5" />, label: 'Email', value: 'hello@thurulyagardens.com' },
+                                { icon: <Mail className="w-5 h-5" />, label: 'Email', value: 'hello@thuruliyagardens.com' },
                                 { icon: <Clock className="w-5 h-5" />, label: 'Opening Hours', value: 'Mon–Sat 8am–6pm · Sun 9am–3pm' },
                             ].map((item) => (
                                 <li key={item.label} className="flex items-start gap-4">
@@ -71,7 +104,7 @@ export default function ContactPage() {
                             <iframe
                                 src="https://www.openstreetmap.org/export/embed.html?bbox=79.84,6.89,79.86,6.91&layer=mapnik"
                                 className="w-full h-full border-0"
-                                title="Thurulya Gardens Location"
+                                title="Thuruliya Gardens Location"
                                 loading="lazy"
                             />
                         </div>
@@ -163,9 +196,10 @@ export default function ContactPage() {
 
                                     <button
                                         type="submit"
-                                        className="w-full py-4 bg-[#2C3E2B] text-white rounded-full hover:bg-opacity-90 transition-colors text-sm font-bold uppercase tracking-wider shadow-md mt-4"
+                                        disabled={isSubmitting}
+                                        className="w-full flex justify-center items-center py-4 bg-[#2C3E2B] text-white rounded-full hover:bg-opacity-90 transition-colors text-sm font-bold uppercase tracking-wider shadow-md mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
                                     >
-                                        Send Message
+                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Message'}
                                     </button>
                                 </form>
                             </div>
